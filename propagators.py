@@ -108,20 +108,20 @@ def prop_FC(csp, newVar=None):
     pruned = []  # List of (var, val) pairs pruned
     
     for con in constraints:
-        # Only process if exactly one variable is unassigned
+        # Only processes if exactly one variable is unassigned
         if con.get_n_unasgn() == 1:
-            var = con.get_unasgn_vars()[0]  # Get the unassigned variable
+            var = con.get_unasgn_vars()[0]  # Gets the unassigned variable
             
-            # Check each value in var's current domain
+            # Checks each value in var's current domain
             for val in var.cur_domain():
                 # If value is already pruned, skip
                 if not var.in_cur_domain(val):
                     continue
                     
-                # Temporarily assign the value
+                # Temporarily assigns the value
                 var.assign(val)
                 
-                # Get values for all variables in constraint
+                # Gets values for all variables in constraint
                 vals = []
                 all_assigned = True
                 
@@ -131,7 +131,7 @@ def prop_FC(csp, newVar=None):
                         break
                     vals.append(v.get_assigned_value())
                 
-                # Unassign the value
+                # Unassigns the value
                 var.unassign()
                 
                 # If all variables had values and tuple isn't valid, prune val
@@ -155,7 +155,7 @@ def prop_GAC(csp, newVar=None):
     else:
         constraints = csp.get_cons_with_var(newVar)
         
-    # Initialize queue with all constraints or just those containing newVar
+    # Initializes queue with all constraints or just those containing newVar
     queue = constraints.copy()
     pruned = []  # List of (var, val) pairs pruned
     

@@ -91,7 +91,7 @@ def binary_ne_grid(cagey_grid):
     n = cagey_grid[0]  # Grid size
     dom = list(range(1, n+1))  # Domain is 1 to n
     
-    # Create variables array
+    # Creates variables array
     var_array = []
     for i in range(n):
         for j in range(n):
@@ -99,37 +99,37 @@ def binary_ne_grid(cagey_grid):
             var = Variable(f'Cell({i+1},{j+1})', dom)
             var_array.append(var)
             
-    # Create CSP
+    # Creates CSP
     csp = CSP(f"binary_ne_grid_{n}", var_array)
     
-    # Add row constraints
+    # Adds row constraints
     for i in range(n):
         for j in range(n):
             for k in range(j+1, n):
-                # Get variables for cells in same row
+                # Gets variables for cells in same row
                 var1 = var_array[i*n + j]
                 var2 = var_array[i*n + k]
                 
-                # Create constraint
+                # Creates constraint
                 con = Constraint(f'R{i+1}_{j+1}!={k+1}', [var1, var2])
                 
-                # Add satisfying tuples where values are not equal
+                # Adds satisfying tuples where values are not equal
                 sat_tuples = [(x,y) for x in dom for y in dom if x != y]
                 con.add_satisfying_tuples(sat_tuples)
                 csp.add_constraint(con)
     
-    # Add column constraints
+    # Adds column constraints
     for j in range(n):
         for i in range(n):
             for k in range(i+1, n):
-                # Get variables for cells in same column
+                # Gets variables for cells in same column
                 var1 = var_array[i*n + j]
                 var2 = var_array[k*n + j]
                 
-                # Create constraint
+                # Creates constraint
                 con = Constraint(f'C{j+1}_{i+1}!={k+1}', [var1, var2])
                 
-                # Add satisfying tuples where values are not equal
+                # Adds satisfying tuples where values are not equal
                 sat_tuples = [(x,y) for x in dom for y in dom if x != y]
                 con.add_satisfying_tuples(sat_tuples)
                 csp.add_constraint(con)
@@ -141,7 +141,7 @@ def nary_ad_grid(cagey_grid):
     n = cagey_grid[0]  # Grid size
     dom = list(range(1, n+1))  # Domain is 1 to n
     
-    # Create variables array
+    # Creates variables array
     var_array = []
     for i in range(n):
         for j in range(n):
@@ -149,32 +149,32 @@ def nary_ad_grid(cagey_grid):
             var = Variable(f'Cell({i+1},{j+1})', dom)
             var_array.append(var)
             
-    # Create CSP
+    # Creates CSP
     csp = CSP(f"nary_ad_grid_{n}", var_array)
     
-    # Add row constraints
+    # Adds row constraints
     for i in range(n):
-        # Get all variables in current row
+        # Gets all variables in current row
         row_vars = [var_array[i*n + j] for j in range(n)]
         
-        # Create constraint
+        # Creates constraint
         con = Constraint(f'Row{i+1}_AllDiff', row_vars)
         
-        # Generate all permutations of 1..n as satisfying tuples
+        # Generates all permutations of 1..n as satisfying tuples
         import itertools
         sat_tuples = list(itertools.permutations(dom))
         con.add_satisfying_tuples(sat_tuples)
         csp.add_constraint(con)
     
-    # Add column constraints
+    # Adds column constraints
     for j in range(n):
-        # Get all variables in current column
+        # Gets all variables in current column
         col_vars = [var_array[i*n + j] for i in range(n)]
         
-        # Create constraint
+        # Creates constraint
         con = Constraint(f'Col{j+1}_AllDiff', col_vars)
         
-        # Generate all permutations of 1..n as satisfying tuples
+        # Generates all permutations of 1..n as satisfying tuples
         sat_tuples = list(itertools.permutations(dom))
         con.add_satisfying_tuples(sat_tuples)
         csp.add_constraint(con)
@@ -185,17 +185,17 @@ def cagey_csp_model(cagey_grid):
     """Returns a CSP object representing a Cagey Grid CSP."""
     n, cages = cagey_grid
     
-    # Create variables array for grid
+    # Creates variables array for grid
     var_array = []
     for i in range(n):
         for j in range(n):
             var = Variable(f'Cell({i+1},{j+1})', list(range(1, n+1)))
             var_array.append(var)
 
-    # Create CSP
+    # Creates CSP
     csp = CSP(f"Cagey_{n}", var_array)
     
-    # Add row and column constraints (using binary not equal)
+    # Adds row and column constraints (using binary not equal)
     for i in range(n):
         for j in range(n):
             for k in range(j+1, n):
@@ -214,16 +214,16 @@ def cagey_csp_model(cagey_grid):
                 con.add_satisfying_tuples(sat_tuples)
                 csp.add_constraint(con)
 
-    # Process each cage
+    # Processes each cage
     for cage in cages:
         target, cell_list, op = cage
         
-        # Get variables for cells in the cage
+        # Gets variables for cells in the cage
         cage_vars = []
         for (row, col) in cell_list:
             cage_vars.append(var_array[(row-1)*n + (col-1)])
             
-        # Create operation variable for the cage
+        # Creates operation variable for the cage
         op_var_name = f'Cage_op({target}:{op}:{cage_vars})'
         if op == '?':
             op_var = Variable(op_var_name, ['+', '-', '*', '/'])
@@ -232,17 +232,17 @@ def cagey_csp_model(cagey_grid):
         var_array.append(op_var)
         csp.add_var(op_var)
         
-        # Create the cage constraint
+        # Creates the cage constraint
         con = Constraint(f'Cage_{target}_{op}_{cell_list}', cage_vars + [op_var])
         
-        # Generate satisfying tuples
+        # Generates satisfying tuples
         sat_tuples = []
         domains = [list(range(1, n+1)) for _ in range(len(cage_vars))]
         op_domain = op_var.domain()
         
         for values in itertools.product(*domains):
             for operation in op_domain:
-                # Check if values satisfy the operation and target
+                # Checks if values satisfy the operation and target
                 if operation == '+' and sum(values) == target:
                     sat_tuples.append(values + (operation,))
                 elif operation == '*' and all(v != 0 for v in values):
